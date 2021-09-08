@@ -1,0 +1,4 @@
+/docker-compose.ymal
+/user-service/.mvn/
+/user-service/.idea
+/user-service/user-service.iml

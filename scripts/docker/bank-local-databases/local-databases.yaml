@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+
+  user-service-db:
+    container_name: user-service-db
+    image: postgres:alpine
+    ports:
+      - 5001:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: letmein
+      POSTGRES_DB: user-service-db
+
+  account-service-db:
+    container_name: account-service-db
+    image: postgres:alpine
+    ports:
+      - 5002:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: letmein
+      POSTGRES_DB: account-service-db
+
+    # External Api
+  risk-service:
+    container_name: risk-service
+    image: daneidmark/risk:0.0.1
+    ports:
+      - 9000:8080
