@@ -6,11 +6,12 @@ import io.wakelesstuna.accountservice.domain.AccountRepository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+@Transactional
 public class AccountRepositoryImp implements AccountRepository {
 
     @PersistenceContext

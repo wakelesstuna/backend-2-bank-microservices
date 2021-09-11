@@ -4,9 +4,12 @@ import io.wakelesstuna.userservice.presentation.dto.*;
 import io.wakelesstuna.userservice.domain.User;
 import io.wakelesstuna.userservice.domain.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
 
@@ -15,6 +18,7 @@ import javax.transaction.Transactional;
 public class AccountService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private final String accountServiceBaseUrl;
     private String getAllAccountsEndPoint = "/api/accounts";
@@ -24,8 +28,9 @@ public class AccountService {
     private final String depositEndPoint = "/api/accounts/deposit";
     private final String withdrawEndPoint = "/api/accounts/withdraw";
 
-    public AccountService(UserRepository userRepository, String accountServiceBaseUrl) {
+    public AccountService(UserRepository userRepository, PasswordEncoder passwordEncoder, String accountServiceBaseUrl) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.accountServiceBaseUrl = accountServiceBaseUrl;
     }
 
@@ -44,16 +49,24 @@ public class AccountService {
         return accountListDto;
     }
 
-    public AccountDto createAccount(User user) {
-        User foundUser = userRepository.findByUsername(user.getUsername()).orElseThrow(() -> new UsernameNotFoundException("no user found"));
+    public AccountDto createAccount(CreateAccountDto createAccountDto) {
+        User foundUser = userRepository.findByUsername(createAccountDto.getUsername()).orElseThrow(() -> new UsernameNotFoundException("no user found"));
+        String password = createAccountDto.getPassword();
 
-        CreateAccountDto createAccountDto = new CreateAccountDto(foundUser.getId());
+        boolean matches = passwordEncoder.matches(password, foundUser.getPassword());
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<AccountDto> entity = restTemplate.postForEntity(accountServiceBaseUrl + createAccountEndPoint, createAccountDto, AccountDto.class);
-        AccountDto body = entity.getBody();
+        log.info("password matches ? {}", matches);
 
-        return body;
+        if (matches) {
+            createAccountDto = new CreateAccountDto(foundUser.getId(), null, null);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<AccountDto> entity = restTemplate.postForEntity(accountServiceBaseUrl + createAccountEndPoint, createAccountDto, AccountDto.class);
+
+            return entity.getBody();
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "password does not match");
+        }
     }
 
     public ResponseEntity<TransactionResponseDto> depositToAccount(TransactionDto transactionDto) {

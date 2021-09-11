@@ -2,12 +2,11 @@ package io.wakelesstuna.accountservice.presentation.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.UUID;
 
-@Data
+@Getter
 public class CreateAccountDto {
     private UUID holderId;
 

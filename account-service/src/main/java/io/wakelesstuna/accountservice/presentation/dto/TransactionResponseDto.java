@@ -3,8 +3,9 @@ package io.wakelesstuna.accountservice.presentation.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class TransactionResponseDto {
 
     private String message;

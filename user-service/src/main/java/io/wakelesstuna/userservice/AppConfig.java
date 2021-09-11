@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.EntityManager;
 import java.time.Duration;
@@ -59,8 +60,8 @@ public class AppConfig {
     }
 
     @Bean
-    public AccountService accountService(UserRepository userRepository) {
-        return new AccountService(userRepository, accountServiceBaseUrl);
+    public AccountService accountService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        return new AccountService(userRepository, passwordEncoder, accountServiceBaseUrl);
     }
 
 }

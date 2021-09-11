@@ -5,6 +5,7 @@ import io.wakelesstuna.userservice.application.UserService;
 import io.wakelesstuna.userservice.presentation.dto.AccountDto;
 import io.wakelesstuna.userservice.presentation.dto.AccountListDto;
 import io.wakelesstuna.userservice.domain.User;
+import io.wakelesstuna.userservice.presentation.dto.CreateAccountDto;
 import io.wakelesstuna.userservice.presentation.dto.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -62,12 +63,12 @@ public class AdminResource {
 
     /**
      * Creates an account for a user
-     * @param user you want to create the account for
+     * @param createAccountDto information about the account you want to create
      * @return AccountDto object
      */
     @PostMapping("/account/open")
-    public ResponseEntity<AccountDto> openAccount(@RequestBody User user) {
-        AccountDto accountDto = accountService.createAccount(user);
+    public ResponseEntity<AccountDto> openAccount(@RequestBody CreateAccountDto createAccountDto) {
+        AccountDto accountDto = accountService.createAccount(createAccountDto);
         return ResponseEntity.ok().body(accountDto);
     }
 

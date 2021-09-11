@@ -23,10 +23,13 @@ public class Account {
 
     private UUID holderId;
 
+    private int accountNumber;
+
     private double balance;
 
-    public Account(UUID holderId) {
+    public Account(UUID holderId, int accountNumber) {
         this.holderId = holderId;
+        this.accountNumber = accountNumber;
         this.balance = 0;
     }
 

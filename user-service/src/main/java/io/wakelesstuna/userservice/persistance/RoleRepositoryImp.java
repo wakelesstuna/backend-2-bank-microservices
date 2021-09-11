@@ -28,6 +28,7 @@ public class RoleRepositoryImp implements RoleRepository {
         em.persist(role);
 
         // TODO: 2021-09-08 hur gör man för att inte dubbel lagra information???
+
         /*Optional<Role> roleOpt = findRoleByName(role.getName());
         if (roleOpt.isEmpty()) {
             em.persist(role);

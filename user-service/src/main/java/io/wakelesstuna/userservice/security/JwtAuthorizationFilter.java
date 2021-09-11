@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -40,9 +41,15 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
        final String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
        log.info("doing filter in JwtAuthorizationFilter... header {}", authorizationHeader);
 
+        String key = request.getParameter("key");
+        log.info("key: {}", key);
+        Cookie[] cookies = request.getCookies();
+        log.info("cookies: {}", (Object) cookies);
+
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")) {
               String jwtToken = authorizationHeader.substring("Bearer ".length());
               UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(jwtToken);
+              log.info("user Authorization !");
               SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
         filterChain.doFilter(request,response);

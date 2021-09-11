@@ -3,9 +3,11 @@ package io.wakelesstuna.userservice.application;
 import io.wakelesstuna.userservice.domain.RoleRepository;
 import io.wakelesstuna.userservice.domain.User;
 import io.wakelesstuna.userservice.domain.UserRepository;
+import io.wakelesstuna.userservice.presentation.dto.AccountListDto;
 import io.wakelesstuna.userservice.presentation.dto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,10 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,6 +33,8 @@ public class UserService implements UserDetailsService {
     private final String accountServiceBaseUrl;
 
     private final String endPointCountForUserAccount = "/api/accounts/total/accounts/";
+
+    private final String endPointForUserAccounts = "/api/accounts";
 
     public UserService(UserRepository userRepository, RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder, String accountServiceBaseUrl) {
         this.userRepository = userRepository;
@@ -57,6 +58,19 @@ public class UserService implements UserDetailsService {
         return createdUser.toUserDto();
     }
 
+    public UserDto getUserByUsername(String username) {
+        User foundUser = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("user not found"));
+
+        final String pathVariable = String.format("/%s", foundUser.getId());
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<AccountListDto> entity = restTemplate.getForEntity(accountServiceBaseUrl + endPointForUserAccounts + pathVariable, AccountListDto.class);
+        if (entity != null){
+            return new UserDto(foundUser.getId(), foundUser.getUsername(), entity.getBody().getAccounts());
+        }else {
+            return  new UserDto(foundUser.getId(), foundUser.getUsername(), new ArrayList<>());
+        }
+    }
+
     /**
      * Fetching all users from the database, then makes a call to
      * the account service to get number of accounts for a user back,
@@ -78,8 +92,6 @@ public class UserService implements UserDetailsService {
             }
             return new UserDto(id, username, numberOfAccounts);
         }).collect(Collectors.toList());
-
-
     }
 
     /**

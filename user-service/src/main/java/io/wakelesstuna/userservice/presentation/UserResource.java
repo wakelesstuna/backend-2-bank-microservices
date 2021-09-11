@@ -34,16 +34,12 @@ public class UserResource {
         this.roleRepository = roleRepository;
     }
 
-    /**
-     * Creates a user
-     * @param user the user you wanna create
-     * @return UserDto object
-     */
-    @PostMapping("/create/user")
-    public ResponseEntity<UserDto> createUser(@RequestBody User user) {
-        UserDto createdUser = userService.createUser(user);
-        return ResponseEntity.status(CREATED).body(createdUser);
+    @GetMapping("/by/username")
+    public ResponseEntity<UserDto> getUser(@RequestParam String username) {
+        UserDto user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
     }
+
 
     /**
      * Deposit a specific amount to an account

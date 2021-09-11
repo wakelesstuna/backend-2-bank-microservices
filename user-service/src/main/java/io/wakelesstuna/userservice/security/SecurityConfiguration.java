@@ -3,6 +3,7 @@ package io.wakelesstuna.userservice.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,21 +47,25 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
         http
                 .csrf().disable()
-                .cors().disable();
-                /*.authorizeRequests()
-                .antMatchers("/api/users").permitAll()
+                .cors().disable()
+                .authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/api/public/create/user").permitAll()
+                .antMatchers("/api/users/**").hasAuthority("USER")
+                .antMatchers("/api/admin/**").hasAuthority("ADMIN")
+                /*.antMatchers("/api/users").permitAll()
                 .antMatchers("/api/admin/create/user").permitAll()
                 //.antMatchers( "/swagger-ui/*", "/swagger-ui.html", "/webjars/**", "/v2/**", "/swagger-resources/**").permitAll()
                 // TODO: 2021-09-06 varför funkar authority istället för hasRole("ADMIN") ???
                 // .antMatchers("/api/admin/all/accounts").hasRole("ADMIN")
                 .antMatchers("/api/admin/all/accounts").hasAuthority("ADMIN")
-                .antMatchers("/api/admin/account/open").hasAuthority("ADMIN")
+                .antMatchers("/api/admin/get/all/users").hasAuthority("ADMIN")
+                .antMatchers("/api/admin/account/open").hasAuthority("ADMIN")*/
 
                 .anyRequest().authenticated().and()
                 .addFilterBefore(corsFilter, JwtAuthenticationFilter.class)
                 .addFilter(filter)
                 .addFilter(jwtAuthorizationFilter)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);*/
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     /*@Bean

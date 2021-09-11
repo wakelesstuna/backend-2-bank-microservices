@@ -7,9 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,21 +24,26 @@ public class AccountService {
     public Account createAccount(CreateAccountDto createAccountDto) {
         UUID holderId = createAccountDto.getHolderId();
 
-        Account account = new Account(holderId);
+        List<Account> accounts = accountRepository.findAllByHolderId(holderId);
+
+        int newAccountNumber = getHighestAccountNumber(accounts) + 1;
+
+        Account account = new Account(holderId, newAccountNumber);
         accountRepository.save(account);
-        log.info("new account created for user: {}", holderId);
+
+        log.info("new account created for user: {}, with account number: {}", holderId, newAccountNumber);
         return account;
     }
 
     public TransactionResponseDto deposit(TransactionDto transactionDto) {
-        log.info("object {}", transactionDto);
         Account account = accountRepository.findById(transactionDto.getAccountId())
                 .orElseThrow(() -> new NoSuchElementException("did not found account"));
+
         double amount = transactionDto.getAmount();
 
         account.deposit(amount);
-
         account = accountRepository.update(account);
+
         final String msg = String.format("deposit amount: %s to account: %s",amount, account.getId());
         log.info(msg);
         return new TransactionResponseDto(msg);
@@ -49,6 +52,7 @@ public class AccountService {
     public TransactionResponseDto withdraw(TransactionDto transactionDto) {
         Account account = accountRepository.findById(transactionDto.getAccountId())
                 .orElseThrow(() -> new NoSuchElementException("did not found account"));
+
         double amount = transactionDto.getAmount();
 
         boolean isAccepted = account.withdraw(amount);
@@ -82,14 +86,27 @@ public class AccountService {
         return convertToAccountListDto(accounts);
     }
 
-    private AccountListDto convertToAccountListDto(List<Account> accounts) {
+    public AccountListDto convertToAccountListDto(List<Account> accounts) {
         List<AccountDto> collect = accounts.stream().map(account -> {
             UUID id = account.getId();
             UUID holderId = account.getHolderId();
+            int accountNumber = account.getAccountNumber();
             double balance = account.getBalance();
-            return new AccountDto(id, holderId, balance);
+            return new AccountDto(id, holderId,accountNumber, balance);
         }).collect(Collectors.toList());
 
         return new AccountListDto(collect);
+    }
+
+    /**
+     * Extracts the highest account number from a list of account numbers
+     * @param accounts list of accounts
+     * @return int that is the highest account number in the list
+     */
+    public int getHighestAccountNumber(List<Account> accounts) {
+        return accounts.stream()
+                .mapToInt(Account::getAccountNumber)
+                .max()
+                .orElse(0);
     }
 }
