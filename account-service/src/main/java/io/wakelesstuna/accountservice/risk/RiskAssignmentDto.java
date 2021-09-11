@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RiskAssignmentDto {
-
-    private boolean pass;
+    private final boolean pass;
 
     @JsonCreator
     public RiskAssignmentDto(@JsonProperty("isPass") boolean pass) {
