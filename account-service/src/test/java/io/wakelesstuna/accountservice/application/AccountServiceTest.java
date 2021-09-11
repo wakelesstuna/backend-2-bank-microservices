@@ -3,17 +3,21 @@ package io.wakelesstuna.accountservice.application;
 import io.wakelesstuna.accountservice.domain.Account;
 import io.wakelesstuna.accountservice.domain.AccountRepository;
 import io.wakelesstuna.accountservice.presentation.dto.*;
+import io.wakelesstuna.accountservice.risk.RiskApi;
+import io.wakelesstuna.accountservice.risk.RiskAssignmentDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,9 +30,12 @@ class AccountServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private RiskApi riskApi;
+
     @BeforeEach
     void init() {
-        accountService = new AccountService(accountRepository);
+        accountService = new AccountService(accountRepository, riskApi, "base-url", "endpoint");
         accounts = List.of(new Account(UUID.randomUUID(),8),
                 new Account(UUID.randomUUID(),5),
                 new Account(UUID.randomUUID(),3),
@@ -39,13 +46,14 @@ class AccountServiceTest {
 
     @Test
     void createAccountTest() {
-
-
         when(accountRepository.findAllByHolderId(uuid))
                 .thenReturn(accounts);
 
         when(accountRepository.save(any(Account.class)))
                 .thenReturn(new Account());
+
+        when(riskApi.callService(anyString(),anyString(),anyString(),any()))
+                .thenReturn(new RiskAssignmentDto(true));
 
         CreateAccountDto createAccountDto = new CreateAccountDto(uuid);
 
@@ -55,6 +63,16 @@ class AccountServiceTest {
 
         verify(accountRepository, timeout(1)).findAllByHolderId(any(UUID.class));
         verify(accountRepository, timeout(1)).save(any(Account.class));
+    }
+
+    @Test
+    void createAccountTestThrowErrorWhenUserNotPassingCreditCheck() {
+        when(riskApi.callService(anyString(),anyString(),anyString(),any()))
+                .thenReturn(new RiskAssignmentDto(false));
+
+        CreateAccountDto createAccountDto = new CreateAccountDto(uuid);
+
+        assertThrows(ResponseStatusException.class, () -> accountService.createAccount(createAccountDto));
     }
 
 

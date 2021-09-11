@@ -14,4 +14,8 @@ public class RiskScoreDto {
     public static RiskScoreDto fail() {
         return new RiskScoreDto(false);
     }
+
+    public boolean isPass() {
+        return pass;
+    }
 }

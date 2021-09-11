@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.NestedServletException;
 
 import javax.transaction.Transactional;
 
@@ -61,7 +62,12 @@ public class AccountService {
             createAccountDto = new CreateAccountDto(foundUser.getId(), null, null);
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<AccountDto> entity = restTemplate.postForEntity(accountServiceBaseUrl + createAccountEndPoint, createAccountDto, AccountDto.class);
+            ResponseEntity<AccountDto> entity;
+            try {
+                 entity = restTemplate.postForEntity(accountServiceBaseUrl + createAccountEndPoint, createAccountDto, AccountDto.class);
+            } catch (Exception ex) {
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,ex.getMessage());
+            }
 
             return entity.getBody();
         } else {

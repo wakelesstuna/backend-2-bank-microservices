@@ -3,8 +3,12 @@ package io.wakelesstuna.accountservice.application;
 import io.wakelesstuna.accountservice.domain.Account;
 import io.wakelesstuna.accountservice.domain.AccountRepository;
 import io.wakelesstuna.accountservice.presentation.dto.*;
+import io.wakelesstuna.accountservice.risk.RiskApi;
+import io.wakelesstuna.accountservice.risk.RiskAssignmentDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -16,23 +20,35 @@ public class AccountService {
 
     @Autowired
     private final AccountRepository accountRepository;
+    @Autowired
+    private final RiskApi riskApi;
 
-    public AccountService(AccountRepository accountRepository) {
+    private final String riskApiBaseUrl;
+    private final String assignmentEndPoint;
+
+    public AccountService(AccountRepository accountRepository, RiskApi riskApi, String riskApiBaseUrl, String assignmentEndPoint) {
         this.accountRepository = accountRepository;
+        this.riskApi = riskApi;
+        this.riskApiBaseUrl = riskApiBaseUrl;
+        this.assignmentEndPoint = assignmentEndPoint;
     }
 
     public Account createAccount(CreateAccountDto createAccountDto) {
         UUID holderId = createAccountDto.getHolderId();
 
-        List<Account> accounts = accountRepository.findAllByHolderId(holderId);
+        if (riskApi.callService(riskApiBaseUrl,assignmentEndPoint,holderId.toString(), RiskAssignmentDto.class).isPass()){
+            List<Account> accounts = accountRepository.findAllByHolderId(holderId);
 
-        int newAccountNumber = getHighestAccountNumber(accounts) + 1;
+            int newAccountNumber = getHighestAccountNumber(accounts) + 1;
 
-        Account account = new Account(holderId, newAccountNumber);
-        accountRepository.save(account);
+            Account account = new Account(holderId, newAccountNumber);
+            accountRepository.save(account);
 
-        log.info("new account created for user: {}, with account number: {}", holderId, newAccountNumber);
-        return account;
+            log.info("new account created for user: {}, with account number: {}", holderId, newAccountNumber);
+            return account;
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "user did not pass the credit check");
+        }
     }
 
     public TransactionResponseDto deposit(TransactionDto transactionDto) {
